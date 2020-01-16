@@ -11,3 +11,6 @@ htmlcov/
 *.swp
 .tox/
 .idea/
+.history/
+.vscode/
+.venv

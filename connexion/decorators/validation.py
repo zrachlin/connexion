@@ -89,6 +89,11 @@ def extend_with_nullable_support(validator_class):
     def nullable_support(validator, properties, instance, schema):
         null_properties = {}
         for property_, subschema in six.iteritems(properties):
+            try:
+                _, subschema = validator.resolver.resolve(subschema["$ref"])
+            except ValueError:
+                pass
+
             if isinstance(instance, collections.Iterable) and \
                     property_ in instance and \
                     instance[property_] is None and \
