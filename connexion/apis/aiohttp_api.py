@@ -5,7 +5,7 @@ import traceback
 from contextlib import suppress
 from http import HTTPStatus
 from urllib.parse import parse_qs
-
+from connexion import http_facts
 import aiohttp_jinja2
 import jinja2
 from aiohttp import web
@@ -291,7 +291,7 @@ class AioHttpApi(AbstractAPI):
             )
 
     @classmethod
-    async def get_request(cls, req):
+    async def get_request(cls, req: web.Request):
         """Convert aiohttp request to connexion
 
         :param req: instance of aiohttp.web.Request
@@ -299,13 +299,37 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        logger.debug('Getting data and status code',
-                     extra={'has_body': req.has_body, 'url': url})
+        # logger.debug('Getting data and status code',
+        #              extra={'has_body': req.has_body, 'url': url})
+        content_type: str = req.content_type
+
+        logger.debug(
+            'Getting data and staus code',
+            extra={
+                'has_body': req.body_exists,
+                'can_read_body': req.can_read_body,
+                'content_type': req.content_type,
+                'url': url
+            },
+        )
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         body = None
-        if req.body_exists:
+        # if req.body_exists:
+
+        if content_type in http_facts.FORM_CONTENT_TYPES:
+            logger.debug('Reading multipart data from request')
+            data = await req.post()
+
+            files = {k: v for k, v in data.items() if isinstance(v, web.FileField)}
+            form = {k: v for k, v in data.items() if isinstance(v. (str, bytes))}
+            body = b''
+
+        else:
+            logger.debug('Reading data from request')
+            form = {}
+            files = {}
             body = await req.read()
 
         return ConnexionRequest(url=url,
@@ -315,7 +339,8 @@ class AioHttpApi(AbstractAPI):
                                 headers=headers,
                                 body=body,
                                 json_getter=lambda: cls.jsonifier.loads(body),
-                                files={},
+                                form=form,
+                                files=files,
                                 context=req)
 
     @classmethod
