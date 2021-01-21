@@ -323,7 +323,7 @@ class AioHttpApi(AbstractAPI):
             data = await req.post()
 
             files = {k: v for k, v in data.items() if isinstance(v, web.FileField)}
-            form = {k: v for k, v in data.items() if isinstance(v. (str, bytes))}
+            form = {k: v for k, v in data.items() if isinstance(v, (str, bytes))}
             body = b''
 
         else:
