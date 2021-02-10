@@ -100,7 +100,7 @@ def parameter_to_arg(operation, function, pythonic_params=False,
 
         kwargs.update(
             operation.get_arguments(request.path_params, query, request_body,
-                                    request.files, arguments, has_kwargs, sanitize)
+                                    request.files, request.form, arguments, has_kwargs, sanitize)
         )
 
         # optionally convert parameter variable names to un-shadowed, snake_case form

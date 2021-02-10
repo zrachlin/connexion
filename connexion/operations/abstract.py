@@ -174,7 +174,9 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
 
     @staticmethod
     def _get_file_arguments(files, arguments, has_kwargs=False):
-        return {k: v for k, v in files.items() if k in arguments or has_kwargs}
+        args = {k: v, for k, v in files.items() if k in arguments or has_kwargs}
+        args.update({K: v, for k, v in form.items() if k in arguments or has_kwargs})
+        return args
 
     @abc.abstractmethod
     def _get_val_from_param(self, value, query_defn):
@@ -270,7 +272,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         if self.method.upper() in ["PATCH", "POST", "PUT"]:
             ret.update(self._get_body_argument(body, arguments,
                                                has_kwargs, sanitize))
-            ret.update(self._get_file_arguments(files, arguments, has_kwargs))
+            ret.update(self._get_file_arguments(files, form, arguments, has_kwargs))
         return ret
 
     def response_definition(self, status_code=None,
