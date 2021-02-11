@@ -259,7 +259,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         :rtype: dict
         """
 
-    def get_arguments(self, path_params, query_params, body, files, arguments,
+    def get_arguments(self, path_params, query_params, body, files, form, arguments,
                       has_kwargs, sanitize):
         """
         get arguments for handler function
