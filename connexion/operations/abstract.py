@@ -173,7 +173,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
         return self._validate_responses
 
     @staticmethod
-    def _get_file_arguments(files, arguments, has_kwargs=False):
+    def _get_file_arguments(files, form, arguments, has_kwargs=False):
         args = {k: v for k, v in files.items() if k in arguments or has_kwargs}
         args.update({k: v for k, v in form.items() if k in arguments or has_kwargs})
         return args
