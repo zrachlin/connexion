@@ -299,37 +299,53 @@ class AioHttpApi(AbstractAPI):
         :rtype: ConnexionRequest
         """
         url = str(req.url)
-        # logger.debug('Getting data and status code',
-        #              extra={'has_body': req.has_body, 'url': url})
-        content_type: str = req.content_type
 
         logger.debug(
-            'Getting data and staus code',
+            'Getting data and status code',
             extra={
-                'has_body': req.body_exists,
+                # has_body | can_read_body report if
+                # body has been read or not
+                # body_exists refers to underlying stream of data
+                'body_exists': req.body_exists,
                 'can_read_body': req.can_read_body,
                 'content_type': req.content_type,
-                'url': url
+                'url': url,
             },
         )
 
         query = parse_qs(req.rel_url.query_string)
         headers = req.headers
         body = None
-        # if req.body_exists:
 
-        if content_type in http_facts.FORM_CONTENT_TYPES:
+        # if request is not multipart, `data` will be empty dict
+        # and stream will not be consumed
+        post_data = await req.post()
+
+        # set those up beforehand, they are needed anyway
+        files = {}
+        form = {}
+
+        if post_data:
             logger.debug('Reading multipart data from request')
-            data = await req.post()
-
-            files = {k: v for k, v in data.items() if isinstance(v, web.FileField)}
-            form = {k: v for k, v in data.items() if isinstance(v, (str, bytes))}
+            for k, v in post_data.items():
+                if isinstance(v, web.FileField):
+                    if k in files:
+                        # if multiple files arrive under the same name in the
+                        # request, downstream requires that we put them all into
+                        # a list under the same key in the files dict.
+                        if isinstance(files[k], list):
+                            files[k].append(v)
+                        else:
+                            files[k] = [files[k], v]
+                    else:
+                        files[k] = v
+                else:
+                    # put normal fields as an array, that's how werkzeug does that for Flask
+                    # and that's what Connexion expects in its processing functions
+                    form[k] = [v]
             body = b''
-
         else:
             logger.debug('Reading data from request')
-            form = {}
-            files = {}
             body = await req.read()
 
         return ConnexionRequest(url=url,
