@@ -175,7 +175,7 @@ class AbstractOperation(SecureOperation, metaclass=abc.ABCMeta):
     @staticmethod
     def _get_file_arguments(files, form, arguments, has_kwargs=False):
         args = {k: v for k, v in files.items() if k in arguments or has_kwargs}
-        args.update({k: v for k, v in form.items() if k in arguments or has_kwargs})
+        args.update({k: v[0] for k, v in form.items() if k in arguments or has_kwargs})
         return args
 
     @abc.abstractmethod
